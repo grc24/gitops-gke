@@ -11,6 +11,8 @@ The Ansible **community.kubernetes** collection is installed:
 
 ```bash
 ansible-galaxy collection install community.kubernetes
+
+pip3 install kubernetes
 ```
 
 ## Argo CD on GKE with Ansible
@@ -19,4 +21,4 @@ ansible-galaxy collection install community.kubernetes
 ```bash
 chmod +x scripts/gke-auth.sh
 ./scripts/gke-auth.sh <CLUSTER_NAME> <REGION> <PROJECT_ID>
-ansible-playbook playbooks/install-argocd.yml
+ansible-playbook -i inventory playbook.yml
