@@ -1,0 +1,7 @@
+---
+# vars file for argo-cd-ansible-gke
+kubeconfig_path: "~/.kube/config"
+argocd_namespace: "argocd"
+argocd_helm_release_name: "argocd"
+argocd_helm_repo: "https://argoproj.github.io/argo-helm"
+argocd_helm_chart: "argo/argo-cd"

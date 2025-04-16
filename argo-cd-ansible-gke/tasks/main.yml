@@ -1,0 +1,43 @@
+---
+# tasks file for argo-cd-ansible-gke
+- name: Create Argo CD namespace
+  community.kubernetes.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ argocd_namespace }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+
+
+- name: Add Argo Helm repo
+  community.kubernetes.helm_repository:
+    name: argo
+    repo_url: "{{ argocd_helm_repo }}"
+
+
+- name: Install Argo CD with Helm
+  community.kubernetes.helm:
+    name: "{{ argocd_helm_release_name }}"
+    chart_ref: "{{ argocd_helm_chart }}"
+    release_namespace: "{{ argocd_namespace }}"
+    create_namespace: false
+    kubeconfig: "{{ kubeconfig_path }}"
+    values:
+      server:
+        service:
+          type: LoadBalancer
+
+
+- name: Wait for ArgoCD server pod to be ready
+  community.kubernetes.k8s_info:
+    kind: Pod
+    namespace: "{{ argocd_namespace }}"
+    label_selectors:
+      - "app.kubernetes.io/name=argocd-server"
+    kubeconfig: "{{ kubeconfig_path }}"
+  register: argocd_pods
+  until: argocd_pods.resources | length > 0 and argocd_pods.resources[0].status.containerStatuses[0].ready
+  retries: 20
+  delay: 15
