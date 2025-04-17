@@ -1,35 +1,34 @@
 # Start from the official AWX-EE base image
 FROM quay.io/ansible/awx-ee:latest
 
-# Set environment variables for Ansible collections
-ENV ANSIBLE_COLLECTIONS_PATHS=/home/runner/.ansible/collections
+# Environment for Ansible Collections and Home directory
 ENV HOME=/home/runner
+ENV ANSIBLE_COLLECTIONS_PATHS=${HOME}/.ansible/collections
 
-# Switch to root to install dependencies
+# Switch to root user for installing and setting permissions
 USER root
 
-# Install additional system packages (if needed)
-# Example: RUN dnf install -y git && dnf clean all
+# Install additional system packages if needed
+# RUN dnf install -y git && dnf clean all
 
-# Ensure the collections directory exists and has correct permissions
-RUN mkdir -p /home/runner/.ansible/collections  /home/runner/inventory /home/runner/project \
-    && chown -R 1000:0 /home/runner \
-    && chmod -R ug+rwx /home/runner
+# Setup working directories
+RUN mkdir -p ${HOME}/.ansible/collections \
+    ${HOME}/inventory \
+    ${HOME}/project \
+ && chown -R 1000:0 ${HOME} \
+ && chmod -R ug+rwx ${HOME}
 
-# Copy all needed
+# Copy necessary files
 COPY requirements.yml /tmp/requirements.yml
 COPY inventory /home/runner/inventory/hosts
 COPY ansible.cfg /home/runner/project/ansible.cfg 
 
-# Switch back to the non-root user (UID 1000)
+# Switch to runner user (UID 1000)
 USER 1000
 
-# Install Ansible collections (requirements.yml (if needed)if requirements.yml exists)
-RUN if [ -f /tmp/requirements.yml ]; then \
-      ansible-galaxy collection install -r /tmp/requirements.yml \
-        --collections-path /home/runner/.ansible/collections; \
-    fi
+# Install Ansible Collections if requirements file exists
+RUN ansible-galaxy collection install -r /tmp/requirements.yml --collections-path ${ANSIBLE_COLLECTIONS_PATHS}
 
-# Set the default entrypoint (critical for AWX compatibility)
+# Set dumb-init and default command for AWX
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["sleep", "infinity"]
