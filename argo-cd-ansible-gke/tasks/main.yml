@@ -1,4 +1,15 @@
 ---
+- name: Get Kubernetes Pods
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: default
+  register: pod_info
+  vars:
+    k8s_auth:
+      host: "https://kubernetes.default.svc"  # Default in-cluster API endpoint
+      validate_certs: no  # Disable if using self-signed certs
+      in_cluster: yes     # Use in-cluster authentication
+      
 # tasks file for argo-cd-ansible-gke
 - name: Create Argo CD namespace
   community.kubernetes.k8s:

@@ -1,34 +1,44 @@
-# Start from the official AWX-EE base image
+# Start from the official AWX EE base image
 FROM quay.io/ansible/awx-ee:latest
 
-# Environment for Ansible Collections and Home directory
-ENV HOME=/home/runner
+# Set environment variables
+ENV HOME=/root
 ENV ANSIBLE_COLLECTIONS_PATHS=${HOME}/.ansible/collections
 
-# Switch to root user for installing and setting permissions
+# Switch to root
 USER root
 
-# Install additional system packages if needed
-# RUN dnf install -y git && dnf clean all
+# Install system dependencies: git, kubectl, helm
+RUN dnf install -y --allowerasing \
+    git \
+    curl \
+    unzip \
+    && dnf clean all \
+    && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+    && curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-# Setup working directories
+RUN pip3 install kubernetes openshift pyyaml
+
+# Setup project directories
 RUN mkdir -p ${HOME}/.ansible/collections \
     ${HOME}/inventory \
     ${HOME}/project \
- && chown -R 1000:0 ${HOME} \
- && chmod -R ug+rwx ${HOME}
+    && chown -R 1000:0 ${HOME} \
+    && chmod -R ug+rwx ${HOME}
 
 # Copy necessary files
 COPY requirements.yml /tmp/requirements.yml
-COPY inventory /home/runner/inventory/hosts
-COPY ansible.cfg /home/runner/project/ansible.cfg 
+COPY inventory ${HOME}/inventory/hosts
+COPY ansible.cfg ${HOME}/project/ansible.cfg 
 
-# Switch to runner user (UID 1000)
-USER 1000
+# Switch back to runner user
 
-# Install Ansible Collections if requirements file exists
+
+# Install Ansible collections
 RUN ansible-galaxy collection install -r /tmp/requirements.yml --collections-path ${ANSIBLE_COLLECTIONS_PATHS}
 
-# Set dumb-init and default command for AWX
+# Final entrypoint
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["sleep", "infinity"]
+
