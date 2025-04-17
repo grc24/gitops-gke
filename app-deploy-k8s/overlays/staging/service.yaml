@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: staging
+  labels:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+  type: NodePort
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 31128
