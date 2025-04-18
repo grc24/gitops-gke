@@ -14,6 +14,7 @@ USER root
 RUN dnf install -y --allowerasing \
     git \
     curl \
+    wget \
     unzip \
     python3-pip \
     && dnf clean all \
