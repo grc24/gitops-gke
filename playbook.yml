@@ -1,7 +1,6 @@
 ---
 - name: Example Playbook with Roles
-  hosts: all
-  #become: true
-  gather_facts: false
+  hosts: localhost
+  gather_facts: no
   roles:
     - role: argo-cd-ansible-gke
